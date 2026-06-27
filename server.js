@@ -1,67 +1,63 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const path = require('path');
+const cors    = require('cors');
+const https   = require('https');
+const path    = require('path');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
-
-const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
-  port: Number(process.env.BREVO_SMTP_PORT || 587),
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_PASS
-  }
-});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.post('/api/contact', async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message)
+    return res.status(400).json({ ok: false, error: 'Name, email and message required' });
 
-    if (!name || !email || !message) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Name, email, and message are required.'
-      });
+  const payload = JSON.stringify({
+    sender:      { name: 'MS Production House', email: process.env.FROM_EMAIL },
+    to:          [{ email: process.env.TO_EMAIL, name: 'Sabir Ali' }],
+    replyTo:     { email, name },
+    subject:     subject ? `Portfolio: ${subject}` : `Portfolio Message from ${name}`,
+    htmlContent: `<h2>New Portfolio Message</h2>
+      <p><b>Name:</b> ${name}</p>
+      <p><b>Email:</b> <a href="mailto:${email}">${email}</a></p>
+      <p><b>Subject:</b> ${subject || '—'}</p>
+      <p><b>Message:</b><br>${String(message).replace(/\n/g,'<br>')}</p>`
+  });
+
+  const options = {
+    method: 'POST', hostname: 'api.brevo.com', path: '/v3/smtp/email',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+      'Content-Length': Buffer.byteLength(payload)
     }
+  };
 
-    await transporter.sendMail({
-      from: {
-        name: 'MS Production House',
-        address: process.env.FROM_EMAIL
-      },
-      to: process.env.TO_EMAIL,
-      replyTo: {
-        name,
-        address: email
-      },
-      subject: subject ? `Portfolio Message: ${subject}` : `Portfolio Message from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject || ''}\n\nMessage:\n${message}`,
-      html: `
-        <h2>New Portfolio Message</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Subject:</strong> ${subject || ''}</p>
-        <p><strong>Message:</strong><br>${String(message).replace(/\n/g, '<br>')}</p>
-      `
+  const apiReq = https.request(options, (apiRes) => {
+    let body = '';
+    apiRes.on('data', d => body += d);
+    apiRes.on('end', () => {
+      if (apiRes.statusCode >= 200 && apiRes.statusCode < 300) {
+        console.log('Email sent:', name);
+        res.json({ ok: true });
+      } else {
+        console.error('Brevo error:', apiRes.statusCode, body);
+        res.status(500).json({ ok: false, error: 'Email failed' });
+      }
     });
-
-    res.json({ ok: true, message: 'Email sent successfully' });
-  } catch (error) {
-    res.status(500).json({ ok: false, error: 'Failed to send email' });
-  }
+  });
+  apiReq.on('error', e => res.status(500).json({ ok: false, error: e.message }));
+  apiReq.setTimeout(20000, () => apiReq.destroy(new Error('Timeout')));
+  apiReq.write(payload); apiReq.end();
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server on port ${PORT}`));
