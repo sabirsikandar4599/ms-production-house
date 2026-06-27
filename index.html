@@ -1201,27 +1201,76 @@ footer::before{
     <p class="sec-eye reveal">Contact</p>
     <h2 class="sec-h reveal">Got an Idea? <em>Let's Ship It.</em></h2>
     <div class="sec-rule reveal"></div>
-    <p class="contact-sub reveal">Whether it's a startup MVP, an EdTech platform, or a custom production system — I build it right. Let's make something that matters.</p>
+
+    <p class="contact-sub reveal">
+      Whether it's a startup MVP, an EdTech platform, or a custom production system — I build it right.
+      Let's make something that matters.
+    </p>
+
     <div class="contact-grid reveal">
       <div class="ci-stack reveal">
-        <a class="ci-card" href="tel:+923414717517"><div class="ci-box">&#128222;</div><div><div class="ci-lbl">Phone</div><div class="ci-val">0341-4717517</div></div></a>
-        <a class="ci-card" href="mailto:ms.production.house.pk@gmail.com"><div class="ci-box">&#9993;&#65039;</div><div><div class="ci-lbl">Email</div><div class="ci-val">ms.production.house.pk@gmail.com</div></div></a>
-        <a class="ci-card" href="https://wa.me/923414717517" target="_blank"><div class="ci-box">&#128172;</div><div><div class="ci-lbl">WhatsApp</div><div class="ci-val">Chat directly &#8594;</div></div></a>
-        <a class="ci-card" href="https://github.com/sabirsikandar4599" target="_blank"><div class="ci-box">&#128025;</div><div><div class="ci-lbl">GitHub</div><div class="ci-val">sabirsikandar4599</div></div></a>
-        <div class="open-badge"><div class="ob-dot"></div><div><div class="ob-txt">Currently Available</div><div class="ob-sub">Open to freelance &amp; contract work worldwide</div></div></div>
+        <a class="ci-card" href="tel:+923414717517">
+          <div class="ci-box">📞</div>
+          <div>
+            <div class="ci-lbl">Phone</div>
+            <div class="ci-val">0341-4717517</div>
+          </div>
+        </a>
+
+        <a class="ci-card" href="mailto:ms.production.house.pk@gmail.com">
+          <div class="ci-box">✉️</div>
+          <div>
+            <div class="ci-lbl">Email</div>
+            <div class="ci-val">ms.production.house.pk@gmail.com</div>
+          </div>
+        </a>
+
+        <a class="ci-card" href="https://wa.me/923414717517" target="_blank" rel="noreferrer">
+          <div class="ci-box">💬</div>
+          <div>
+            <div class="ci-lbl">WhatsApp</div>
+            <div class="ci-val">Chat directly →</div>
+          </div>
+        </a>
+
+        <a class="ci-card" href="https://github.com/sabirsikandar4599" target="_blank" rel="noreferrer">
+          <div class="ci-box">🐙</div>
+          <div>
+            <div class="ci-lbl">GitHub</div>
+            <div class="ci-val">sabirsikandar4599</div>
+          </div>
+        </a>
       </div>
-      <div class="cf-wrap reveal">
+
+      <form class="cf-wrap reveal" onsubmit="sendMsg(event)">
         <div class="cf-hd">Send a Message</div>
         <div class="cf-sd">I reply within 24 hours.</div>
+
         <div class="cf-row">
-          <div class="cf-f"><label class="cf-l">// name *</label><input class="cf-i" id="cfn" type="text" placeholder="Your name"/></div>
-          <div class="cf-f"><label class="cf-l">// email *</label><input class="cf-i" id="cfe" type="email" placeholder="your@email.com"/></div>
+          <div class="cf-field">
+            <label class="cf-l" for="cfn">Name</label>
+            <input class="cf-i" id="cfn" type="text" placeholder="Your name" required>
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-l" for="cfe">Email</label>
+            <input class="cf-i" id="cfe" type="email" placeholder="Your email" required>
+          </div>
         </div>
-        <div class="cf-f"><label class="cf-l">// subject</label><input class="cf-i" id="cfs" type="text" placeholder="Project or question..."/></div>
-        <div class="cf-f"><label class="cf-l">// message *</label><textarea class="cf-i" id="cfm" rows="4" placeholder="Tell me about your project..."></textarea></div>
-        <button class="cf-btn" id="cfBtn" onclick="sendMsg()">Send Message &#8594;</button>
-        <div class="cf-status" id="cfStat"></div>
-      </div>
+
+        <div class="cf-field">
+          <label class="cf-l" for="cfs">Subject</label>
+          <input class="cf-i" id="cfs" type="text" placeholder="Subject">
+        </div>
+
+        <div class="cf-field">
+          <label class="cf-l" for="cfm">Message</label>
+          <textarea class="cf-i cf-text" id="cfm" rows="5" placeholder="Type your message..." required></textarea>
+        </div>
+
+        <button class="cf-btn" type="submit">Send Message</button>
+        <p id="cfStatus" style="margin-top:12px;font-size:14px;"></p>
+      </form>
     </div>
   </div>
 </section>
@@ -1458,50 +1507,56 @@ window.addEventListener("scroll",function(){
 },{passive:true});
 
 // CONTACT FORM
-async function sendMsg(){
-  var name=document.getElementById("cfn").value.trim();
-  var email=document.getElementById("cfe").value.trim();
-  var subj=document.getElementById("cfs").value.trim();
-  var msg=document.getElementById("cfm").value.trim();
-  var btn=document.getElementById("cfBtn"),stat=document.getElementById("cfStat");
-  function setS(t,col,bg){
-    stat.style.cssText="display:block;color:"+col+";background:"+bg+";border-radius:8px;padding:9px;margin-top:9px;font-family:var(--mono);font-size:12px;font-weight:700";
-    stat.textContent=t;
+async function sendMsg(e) {
+  e.preventDefault();
+
+  const status = document.getElementById('cfStatus');
+  const btn = document.querySelector('.cf-btn');
+
+  const payload = {
+    name: document.getElementById('cfn').value.trim(),
+    email: document.getElementById('cfe').value.trim(),
+    subject: document.getElementById('cfs').value.trim(),
+    message: document.getElementById('cfm').value.trim()
+  };
+
+  if (!payload.name || !payload.email || !payload.message) {
+    status.textContent = 'Please fill all required fields.';
+    status.style.color = '#ff6b6b';
+    return;
   }
-  if(!name||!email||!msg){setS("Please fill all required fields.","#f87171","rgba(248,113,113,.08)");return;}
-  btn.disabled=true;btn.textContent="Sending...";
-  var br=msg.split(String.fromCharCode(10)).join("<br>");
-  var body="<div style='font-family:Inter,Arial;max-width:520px;margin:auto;background:#f8fafc;padding:24px;border-radius:14px'>"
-    +"<div style='background:linear-gradient(90deg,#f97316,#dc6a0a);padding:16px;border-radius:10px;margin-bottom:16px'>"
-    +"<h2 style='color:#fff;margin:0;font-size:16px'>New Portfolio Message</h2></div>"
-    +"<table style='width:100%;font-size:13px;color:#1e293b'>"
-    +"<tr><td style='padding:6px 0;font-weight:700;color:#94a3b8;width:65px'>From</td><td>"+name+"</td></tr>"
-    +"<tr><td style='padding:6px 0;font-weight:700;color:#94a3b8'>Email</td><td><a href='mailto:"+email+"' style='color:#f97316'>"+email+"</a></td></tr>"
-    +"<tr><td style='padding:6px 0;font-weight:700;color:#94a3b8'>Subject</td><td>"+(subj||"&#8212;")+"</td></tr></table>"
-    +"<div style='background:#fff;border-radius:8px;padding:14px;margin-top:12px;font-size:13px;line-height:1.8;color:#334155;border-left:3px solid #f97316'>"+br+"</div></div>";
-  try{
-    var res=await fetch("https://api.brevo.com/v3/smtp/email",{
-      method:"POST",
-      headers:{"api-key":"xkeysib-REPLACE","Content-Type":"application/json","accept":"application/json"},
-      body:JSON.stringify({
-        sender:{name:name,email:"ms.production.house.pk@gmail.com"},
-        to:[{email:"sabirsikandar4599@gmail.com",name:"Sabir Ali"}],
-        replyTo:{email:email,name:name},
-        subject:"Portfolio: "+(subj||"New Message")+" - "+name,
-        htmlContent:body
-      })
+
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    status.textContent = 'Sending message...';
+    status.style.color = '#aaa';
+
+    const res = await fetch('http://localhost:3000/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    if(res.ok){
-      setS("Message sent! Will reply within 24 hours.","#4ade80","rgba(74,222,128,.08)");
-      btn.textContent="Sent!";btn.disabled=false;
-      ["cfn","cfe","cfs","cfm"].forEach(function(id){document.getElementById(id).value="";});
-    }else throw new Error(res.status);
-  }catch(e){
-    window.location.href="mailto:ms.production.house.pk@gmail.com?subject="
-      +encodeURIComponent("Portfolio: "+(subj||name))
-      +"&body="+encodeURIComponent(name+" ("+email+")");
-    setS("Opening email client...","#fbbf24","rgba(251,191,36,.08)");
-    btn.textContent="Send Message";btn.disabled=false;
+
+    const data = await res.json();
+
+    if (data.ok) {
+      status.textContent = 'Message sent successfully!';
+      status.style.color = '#4ade80';
+      document.getElementById('cfn').value = '';
+      document.getElementById('cfe').value = '';
+      document.getElementById('cfs').value = '';
+      document.getElementById('cfm').value = '';
+    } else {
+      status.textContent = data.error || 'Failed to send message.';
+      status.style.color = '#ff6b6b';
+    }
+  } catch (err) {
+    status.textContent = 'Server error. Please try again.';
+    status.style.color = '#ff6b6b';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Message';
   }
 }
 </script>
